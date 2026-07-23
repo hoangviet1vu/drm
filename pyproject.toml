@@ -1,0 +1,69 @@
+[project]
+name = "drm"
+version = "0.1.0"
+description = "Measure per-task processing time for an Airflow DAG run"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "typer>=0.15",
+  "httpx>=0.28",
+  "pyyaml>=6.0",
+]
+
+[project.scripts]
+drm = "drm.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/hoangviet1vu/drm"
+Issues = "https://github.com/hoangviet1vu/drm/issues"
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=6",
+  "pytest-mock>=3",
+  "respx>=0.22",
+  "ruff>=0.14",
+  "mypy>=1.14",
+  "types-pyyaml>=6",
+  "pre-commit>=4",
+]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.10"]
+build-backend = "uv_build"
+
+# ---------- ruff ----------
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "S", "ANN", "PL", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "ANN", "PLR2004"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ---------- pytest ----------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+# ---------- mypy ----------
+[tool.mypy]
+files = ["src", "tests"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "respx.*"
+ignore_missing_imports = true
+
+# ---------- coverage ----------
+[tool.coverage.run]
+source = ["src"]
+branch = true
