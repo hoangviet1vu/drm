@@ -52,6 +52,46 @@ class TestAuthenticateSuccess:
         assert result.expires_at == "2026-01-01T00:00:00+00:00"
 
     @respx.mock
+    def test_returns_auth_result_on_201_created(self, client):
+        """Regression test for HTTP 201 fix.
+
+        Validates: Requirements 2.1, 2.2 — HTTP 201 Created is treated as a
+        successful authentication response, returning an AuthResult with the
+        token and expiry from the response body.
+        """
+        respx.post(TOKEN_ENDPOINT).mock(
+            return_value=httpx.Response(
+                201,
+                json={
+                    "access_token": "jwt-created",
+                    "expires_at": "2026-01-01T00:00:00+00:00",
+                },
+            )
+        )
+
+        result = client.authenticate(BASE_URL, USERNAME, PASSWORD)
+
+        assert isinstance(result, AuthResult)
+        assert result.token == "jwt-created"
+        assert result.expires_at == "2026-01-01T00:00:00+00:00"
+
+    @respx.mock
+    def test_returns_none_expires_at_when_field_missing(self, client):
+        """When response has no expires_at, AuthResult.expires_at is None."""
+        respx.post(TOKEN_ENDPOINT).mock(
+            return_value=httpx.Response(
+                200,
+                json={"access_token": "jwt-no-expiry"},
+            )
+        )
+
+        result = client.authenticate(BASE_URL, USERNAME, PASSWORD)
+
+        assert isinstance(result, AuthResult)
+        assert result.token == "jwt-no-expiry"
+        assert result.expires_at is None
+
+    @respx.mock
     def test_sends_username_and_password_in_request_body(self, client):
         """Validates: Requirement 9.1 — credentials are sent as JSON POST body."""
         route = respx.post(TOKEN_ENDPOINT).mock(

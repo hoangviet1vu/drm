@@ -1,0 +1,129 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "On unfixed code, all 50 generated examples confirm the bug: HTTP 201 with any non-empty access_token and valid expires_at datetime raises UnexpectedResponseError(status_code=201, url='https://airflow.example.com/auth/token'). Example: access_token='0', expires_at='0001-01-01T00:00:00' → raises UnexpectedResponseError(201, endpoint).",
+      "lastRunTimestamp": 1784885382762
+    },
+    "2.2 Verify bug condition exploration test now FAILS (confirms fix works)": {
+      "status": "passed",
+      "failingExample": "access_token='0', expires_at='2000-01-01T00:00:00' — authenticate() returned successfully instead of raising UnexpectedResponseError, confirming the fix works (201 is now accepted as a valid success response).",
+      "lastRunTimestamp": 1784885496665
+    },
+    "2.3 Verify existing tests still pass (preservation)": {
+      "status": "passed",
+      "lastRunTimestamp": 1784885541635
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885146014
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885155054
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885396861
+      }
+    ],
+    "2.1 Implement the fix": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885146116
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885405731
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885455771
+      }
+    ],
+    "2.2 Verify bug condition exploration test now FAILS (confirms fix works)": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885146135
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885460044
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885508642
+      }
+    ],
+    "2.3 Verify existing tests still pass (preservation)": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885146153
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885513270
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885553792
+      }
+    ],
+    "3. Add regression test for HTTP 201 success": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885146171
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885559173
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885607053
+      }
+    ],
+    "4. Checkpoint — Ensure all tests pass": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885146188
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885611795
+      },
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885649606
+      }
+    ],
+    "2. Apply the fix to `src/drm/airflow/auth.py`": [
+      {
+        "executionId": "6a435e5a-7245-42c0-88c5-cad3659ed6e9",
+        "chatSessionId": "sess_a1ae0057-a8b6-4e13-aca4-b42df2dde658",
+        "timestamp": 1784885553829
+      }
+    ]
+  }
+}

@@ -18,7 +18,7 @@ class TokenData:
 
     token: str
     server: str
-    expires_at: str  # ISO 8601
+    expires_at: str | None = None  # ISO 8601 or None if not provided
 
 
 def get_token_path() -> Path:
@@ -128,10 +128,16 @@ def _parse_token_file(token_path: Path) -> TokenData | None:
         or not token
         or not isinstance(server, str)
         or not server
-        or not isinstance(expires_at, str)
-        or not expires_at
     ):
         return None
+
+    # expires_at is optional: accept str or None/missing
+    if expires_at is not None and not isinstance(expires_at, str):
+        return None
+
+    # Normalize empty string to None
+    if expires_at == "":
+        expires_at = None
 
     return TokenData(token=token, server=server, expires_at=expires_at)
 

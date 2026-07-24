@@ -11,7 +11,7 @@ class AuthResult:
     """Successful authentication outcome."""
 
     token: str
-    expires_at: str  # ISO 8601
+    expires_at: str | None  # ISO 8601 or None if not provided
 
 
 class AirflowAuthClient(Protocol):

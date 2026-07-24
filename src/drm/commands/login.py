@@ -112,4 +112,7 @@ def login(
     save_token(TokenData(token=result.token, server=url, expires_at=result.expires_at))
 
     # 4. Print confirmation (never echo token or password)
-    typer.echo(f"Logged in to {url} — token expires {result.expires_at}")
+    if result.expires_at:
+        typer.echo(f"Logged in to {url} — token expires {result.expires_at}")
+    else:
+        typer.echo(f"Logged in to {url}")

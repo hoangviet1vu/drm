@@ -11,6 +11,7 @@ from drm.core.errors import (
 )
 
 _HTTP_OK = 200
+_HTTP_CREATED = 201
 _HTTP_UNAUTHORIZED = 401
 _HTTP_SERVER_ERROR_MIN = 500
 _HTTP_SERVER_ERROR_MAX = 599
@@ -37,11 +38,11 @@ class Airflow3AuthClient:
             endpoint, {"username": username, "password": password}
         )
 
-        if response.status_code == _HTTP_OK:
+        if response.status_code in (_HTTP_OK, _HTTP_CREATED):
             body = response.json_body or {}
             return AuthResult(
                 token=str(body.get("access_token", "")),
-                expires_at=str(body.get("expires_at", "")),
+                expires_at=body.get("expires_at"),  # None if not present
             )
 
         if response.status_code == _HTTP_UNAUTHORIZED:

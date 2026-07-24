@@ -1,0 +1,10 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "All 3 tests PASSED on unfixed code, confirming the bug exists:\n1. test_missing_expires_at_produces_empty_string: authenticate() returns expires_at=\"\" when response has no expires_at field\n2. test_null_expires_at_produces_string_none: authenticate() returns expires_at=\"None\" when response has expires_at: null\n3. test_empty_expires_at_token_file_rejected: TokenData with expires_at=\"\" is saved but load_token() rejects it (returns None)",
+      "lastRunTimestamp": 1784886584881
+    }
+  },
+  "executionHistory": {}
+}

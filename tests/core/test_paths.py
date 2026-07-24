@@ -231,3 +231,113 @@ class TestRoundTrip:
         assert loaded.token == original.token
         assert loaded.server == original.server
         assert loaded.expires_at == original.expires_at
+
+    def test_save_then_load_with_none_expires_at(self, monkeypatch, tmp_path):
+        """Round-trip with expires_at=None preserves None."""
+        token_path = tmp_path / "drm" / "token.json"
+        monkeypatch.setattr("drm.core.paths.get_token_path", lambda: token_path)
+
+        original = TokenData(
+            token="eyJhbGciOiJIUzI1NiJ9.test",
+            server="https://airflow.prod.example.com",
+            expires_at=None,
+        )
+        save_token(original)
+        loaded = load_token()
+
+        assert loaded is not None
+        assert loaded.token == original.token
+        assert loaded.server == original.server
+        assert loaded.expires_at is None
+
+
+class TestNoneExpiresAt:
+    """Test optional expires_at handling."""
+
+    def test_save_token_with_none_expires_at(self, monkeypatch, tmp_path):
+        """save_token works when expires_at is None."""
+        token_path = tmp_path / "drm" / "token.json"
+        monkeypatch.setattr("drm.core.paths.get_token_path", lambda: token_path)
+
+        data = TokenData(
+            token="tok-no-expiry",
+            server="https://airflow.example.com",
+            expires_at=None,
+        )
+        save_token(data)
+
+        assert token_path.exists()
+        content = json.loads(token_path.read_text(encoding="utf-8"))
+        assert content["token"] == "tok-no-expiry"
+        assert content["server"] == "https://airflow.example.com"
+        assert content["expires_at"] is None
+
+    def test_load_token_with_null_expires_at(self, monkeypatch, tmp_path):
+        """load_token correctly loads a file with \"expires_at\": null."""
+        token_path = tmp_path / "drm" / "token.json"
+        monkeypatch.setattr("drm.core.paths.get_token_path", lambda: token_path)
+        token_path.parent.mkdir(parents=True)
+        token_path.write_text(
+            json.dumps(
+                {
+                    "token": "jwt-null",
+                    "server": "https://airflow.test",
+                    "expires_at": None,
+                }
+            ),
+            encoding="utf-8",
+        )
+        if os.name != "nt":
+            os.chmod(token_path, 0o600)
+
+        result = load_token()
+        assert result is not None
+        assert result.token == "jwt-null"
+        assert result.server == "https://airflow.test"
+        assert result.expires_at is None
+
+    def test_load_token_with_missing_expires_at_key(self, monkeypatch, tmp_path):
+        """load_token correctly loads a file with no expires_at key at all."""
+        token_path = tmp_path / "drm" / "token.json"
+        monkeypatch.setattr("drm.core.paths.get_token_path", lambda: token_path)
+        token_path.parent.mkdir(parents=True)
+        token_path.write_text(
+            json.dumps(
+                {
+                    "token": "jwt-missing-key",
+                    "server": "https://airflow.test",
+                }
+            ),
+            encoding="utf-8",
+        )
+        if os.name != "nt":
+            os.chmod(token_path, 0o600)
+
+        result = load_token()
+        assert result is not None
+        assert result.token == "jwt-missing-key"
+        assert result.server == "https://airflow.test"
+        assert result.expires_at is None
+
+    def test_load_token_normalizes_empty_string_to_none(self, monkeypatch, tmp_path):
+        """load_token normalizes empty string expires_at to None."""
+        token_path = tmp_path / "drm" / "token.json"
+        monkeypatch.setattr("drm.core.paths.get_token_path", lambda: token_path)
+        token_path.parent.mkdir(parents=True)
+        token_path.write_text(
+            json.dumps(
+                {
+                    "token": "jwt-empty",
+                    "server": "https://airflow.test",
+                    "expires_at": "",
+                }
+            ),
+            encoding="utf-8",
+        )
+        if os.name != "nt":
+            os.chmod(token_path, 0o600)
+
+        result = load_token()
+        assert result is not None
+        assert result.token == "jwt-empty"
+        assert result.expires_at is None
