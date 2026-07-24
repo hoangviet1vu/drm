@@ -2,6 +2,7 @@
 
 import typer
 
+import drm.airflow.registration  # noqa: F401
 from drm.commands import login, measure
 from drm.core.errors import DrmError
 

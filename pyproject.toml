@@ -27,6 +27,7 @@ dev = [
   "mypy>=1.14",
   "types-pyyaml>=6",
   "pre-commit>=4",
+  "hypothesis>=6.161.1",
 ]
 
 [build-system]
@@ -43,7 +44,7 @@ src = ["src", "tests"]
 select = ["E", "W", "F", "I", "UP", "B", "SIM", "S", "ANN", "PL", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "ANN", "PLR2004"]
+"tests/**" = ["S101", "S105", "S106", "ANN", "PLR2004", "PLR0913", "PLC0415", "SIM117", "SIM105", "B023", "PLW0108", "RUF002", "RUF003"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -62,6 +63,11 @@ strict = true
 [[tool.mypy.overrides]]
 module = "respx.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
 
 # ---------- coverage ----------
 [tool.coverage.run]
