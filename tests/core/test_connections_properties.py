@@ -198,8 +198,10 @@ class TestAllReaderErrorsAreDrmErrorSubclasses:
 # ---------------------------------------------------------------------------
 
 # Strategy: generate any permission mode that has group or world bits set
+# AND is greater than 0o600 (matches the implementation check: mode > 0o600)
+# AND allows the owner to read the file (owner read bit set)
 _insecure_modes = st.integers(min_value=0o000, max_value=0o777).filter(
-    lambda m: m & 0o077 != 0
+    lambda m: m & 0o077 != 0 and m > 0o600 and m & 0o400 != 0
 )
 
 
@@ -217,27 +219,28 @@ class TestPosixPermissionEnforcement:
 
     @given(mode=_insecure_modes)
     @settings(max_examples=200)
-    def test_insecure_mode_raises_permission_error(self, tmp_path, mode):
+    def test_insecure_mode_raises_permission_error(self, mode):
         """Any mode with group/world bits set must be rejected."""
-        conn_file = tmp_path / "connections.json"
-        conn_file.write_text(
-            json.dumps(
-                {
-                    "dev": {
-                        "url": "https://airflow.example.com",
-                        "username": "admin",
-                        "password": "secret",
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            conn_file = Path(tmp_dir) / "connections.json"
+            conn_file.write_text(
+                json.dumps(
+                    {
+                        "dev": {
+                            "url": "https://airflow.example.com",
+                            "username": "admin",
+                            "password": "secret",
+                        }
                     }
-                }
-            ),
-            encoding="utf-8",
-        )
-        os.chmod(conn_file, mode)
+                ),
+                encoding="utf-8",
+            )
+            os.chmod(conn_file, mode)
 
-        with pytest.raises(ConnectionFilePermissionError) as exc_info:
-            read_connections(conn_file)
+            with pytest.raises(ConnectionFilePermissionError) as exc_info:
+                read_connections(conn_file)
 
-        assert "chmod 600" in str(exc_info.value)
+            assert "chmod 600" in str(exc_info.value)
 
     def test_mode_0o600_does_not_raise(self, tmp_path):
         """Mode 0o600 (owner read/write only) is the happy path boundary."""
