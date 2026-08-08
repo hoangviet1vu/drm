@@ -82,7 +82,9 @@ class FakeClient:
 
     result: AuthResult
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         return self.result
 
 
@@ -320,12 +322,15 @@ class TestCredentialOverrideMerging:
             "drm.commands.login.get_connection",
             return_value=fake_entry,
         ):
-            result_url, result_username, result_password = _resolve_credentials(
+            creds = _resolve_credentials(
                 connection="test_conn",
                 username=username_arg,
                 password=password_arg,
                 server=server_arg,
             )
+            result_url = creds.url
+            result_username = creds.username
+            result_password = creds.password
 
         # Each override field replaces the entry field
         if apply_u:
@@ -555,7 +560,12 @@ class TestConnectionLookupRoundTrip:
 
         class CapturingClient:
             def authenticate(
-                self, url: str, username: str, password: str
+                self,
+                url: str,
+                username: str,
+                password: str,
+                *,
+                proxy: str | None = None,
             ) -> AuthResult:
                 authenticate_calls.append((url, username, password))
                 return fake_result
@@ -632,7 +642,9 @@ class _FailingClient:
     def __init__(self, error: Exception) -> None:
         self._error = error
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         raise self._error
 
 

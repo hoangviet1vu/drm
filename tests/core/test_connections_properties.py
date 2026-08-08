@@ -495,6 +495,8 @@ class TestConnectionsFileParsingPreservesFields:
                     "url",
                     "username",
                     "password",
+                    "proxies",
+                    "noproxy",
                 }
 
 

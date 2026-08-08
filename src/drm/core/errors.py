@@ -63,3 +63,15 @@ class ConnectionNotFoundError(DrmError):
 
 class ConnectionFilePermissionError(DrmError):
     """Connections file has unsafe permissions (group/world bits set or wrong owner)."""
+
+
+# --- Proxy errors ---
+
+
+class ProxyValidationError(DrmError):
+    """Proxy URL failed validation (wrong scheme, missing host)."""
+
+    def __init__(self, url: str, source: str) -> None:
+        self.url = url
+        self.source = source
+        super().__init__(f"Invalid proxy URL from {source}: {url}")

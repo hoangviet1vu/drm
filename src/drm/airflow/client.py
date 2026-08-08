@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import httpx
 
 from drm.core.errors import NetworkError, TimeoutError
+from drm.core.proxy import sanitize_proxy_url
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,8 +21,9 @@ class HttpResponse:
 class AirflowHttpClient:
     """Thin httpx wrapper that translates transport errors to DrmError subclasses."""
 
-    def __init__(self, *, timeout: float = 30.0) -> None:
+    def __init__(self, *, timeout: float = 30.0, proxy: str | None = None) -> None:
         self._timeout = timeout
+        self._proxy = proxy
 
     def post_json(self, url: str, body: dict[str, str]) -> HttpResponse:
         """POST JSON to the given URL.
@@ -33,11 +35,19 @@ class AirflowHttpClient:
             NetworkError: on httpx.ConnectError or other transport errors
         """
         try:
-            with httpx.Client(timeout=self._timeout) as client:
+            with httpx.Client(
+                timeout=self._timeout,
+                proxy=self._proxy,
+                trust_env=False,
+            ) as client:
                 response = client.post(url, json=body)
         except httpx.TimeoutException:
             raise TimeoutError(url) from None
         except httpx.TransportError:
+            if self._proxy:
+                raise NetworkError(
+                    f"Proxy unreachable: {sanitize_proxy_url(self._proxy)}"
+                ) from None
             raise NetworkError(f"Server unreachable: {url}") from None
 
         try:

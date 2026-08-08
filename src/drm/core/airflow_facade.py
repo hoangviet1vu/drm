@@ -17,7 +17,9 @@ class AuthResult:
 class AirflowAuthClient(Protocol):
     """Protocol for Airflow authentication implementations."""
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         """Exchange credentials for a token.
 
         Raise DrmError subclasses on failure (network, credentials, timeout,

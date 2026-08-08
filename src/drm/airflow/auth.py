@@ -21,9 +21,11 @@ class Airflow3AuthClient:
     """Airflow 3.x JWT authentication client."""
 
     def __init__(self, *, timeout: float = 30.0) -> None:
-        self._http = AirflowHttpClient(timeout=timeout)
+        self._timeout = timeout
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         """POST to {url}/auth/token to exchange credentials for a JWT.
 
         Raises:
@@ -33,8 +35,9 @@ class Airflow3AuthClient:
             UnexpectedResponseError: any other non-200 status
             NetworkError: DNS failure, connection refused (raised by AirflowHttpClient)
         """
+        http = AirflowHttpClient(timeout=self._timeout, proxy=proxy)
         endpoint = f"{url.rstrip('/')}/auth/token"
-        response = self._http.post_json(
+        response = http.post_json(
             endpoint, {"username": username, "password": password}
         )
 

@@ -26,7 +26,9 @@ class FakeClient:
         self._result = result
         self.calls: list[tuple[str, str, str]] = []
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         self.calls.append((url, username, password))
         return self._result
 

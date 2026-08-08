@@ -89,6 +89,8 @@ drm login -u <username> [-p <password>] [--server <url>]
 | `-u` | `--username` | Airflow username. Required. |
 | `-p` | `--password` | Password. **Omit this** — see below. |
 | `--server` | | Airflow base URL, e.g. `https://airflow.example.com` |
+| `--proxy` | | Proxy URL (`http://` or `https://`). See [Proxy configuration](#proxy-configuration). |
+| `--no-proxy` | | Comma-separated hosts/patterns to bypass proxy. |
 
 **Do not pass `-p` on the command line in normal use.** A password given as an
 argument is written to your shell history and is visible in `ps` output to
@@ -116,6 +118,8 @@ drm measure -dag <dag-id> -id <dag-run-id> -output <path> -format <csv|yaml|json
 | `-id` | `--run-id` | DAG run ID, e.g. `manual__2026-07-23T09:00:00+00:00`. Required. |
 | `-output` | `-o` | Output file path. Required. |
 | `-format` | `-f` | `csv`, `json`, or `yaml`. Required. |
+| `--proxy` | | Proxy URL (`http://` or `https://`). See [Proxy configuration](#proxy-configuration). |
+| `--no-proxy` | | Comma-separated hosts/patterns to bypass proxy. |
 
 Both IDs are required. The Airflow API scopes task instances by DAG, so a run
 ID alone is not enough to locate them.
@@ -260,6 +264,123 @@ Command-line options take precedence over environment variables.
 export DRM_SERVER=https://airflow.example.com
 drm login -u airflow_user
 ```
+
+---
+
+## Proxy configuration
+
+`drm` can route all Airflow API traffic through an HTTP or HTTPS forward proxy.
+Three configuration levels are supported, evaluated in strict precedence order.
+
+### Precedence
+
+1. **CLI flag** (`--proxy` / `--no-proxy`) — highest priority
+2. **Connection file** (`proxies` field in `connections.json`)
+3. **Environment variables** (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`) — lowest
+
+Precedence applies independently to the proxy URL and the no-proxy list. For
+example, `--no-proxy` can override a connection file's `noproxy` list while the
+proxy URL itself still comes from the connection file.
+
+### Proxy URL format
+
+A valid proxy URL must start with `http://` or `https://` and contain a
+non-empty host. A port is optional.
+
+```
+http://proxy.corp:8080
+https://secure-proxy.corp:3128
+http://192.168.1.10:3128
+```
+
+An invalid proxy URL produces a clear error and a non-zero exit code.
+
+### CLI flags
+
+Both `drm login` and `drm measure` accept `--proxy` and `--no-proxy`:
+
+```bash
+# Route login through a proxy
+drm login -u admin --server https://airflow.corp --proxy http://proxy.corp:8080
+
+# Route measure through a proxy
+drm measure -dag etl_daily -id run123 -output out.csv -format csv \
+  --proxy http://proxy.corp:8080
+
+# Proxy with selective bypass
+drm login -u admin --server https://airflow.corp \
+  --proxy http://proxy.corp:8080 \
+  --no-proxy "localhost,.internal.com"
+```
+
+### Connection file
+
+A `connections.json` entry can include a `proxies` object with `http`, `https`,
+and `noproxy` keys:
+
+```json
+{
+  "prod": {
+    "url": "https://airflow.prod.example.com",
+    "username": "deploy",
+    "password": "...",
+    "proxies": {
+      "http": "http://proxy.corp:8080",
+      "https": "http://proxy.corp:8080",
+      "noproxy": "localhost,.internal.com,10.0.0.0/8"
+    }
+  }
+}
+```
+
+The `noproxy` value can be a comma-separated string (as above) or a JSON array:
+
+```json
+"noproxy": ["localhost", ".internal.com", "10.0.0.0/8"]
+```
+
+Only `http`, `https`, and `noproxy` keys are read; others are silently ignored.
+
+### Environment variables
+
+When no CLI flag or connection file proxy is configured, `drm` reads the
+standard proxy environment variables:
+
+| Variable | Purpose |
+|---|---|
+| `HTTP_PROXY` (or `http_proxy`) | Proxy for HTTP connections |
+| `HTTPS_PROXY` (or `https_proxy`) | Proxy for HTTPS connections |
+| `NO_PROXY` (or `no_proxy`) | Comma-separated bypass list |
+
+When both uppercase and lowercase variants exist, the uppercase variant is
+preferred.
+
+```bash
+export HTTPS_PROXY=http://proxy.corp:8080
+export NO_PROXY="localhost,.internal.com"
+drm login -u admin --server https://airflow.corp
+```
+
+### No-proxy matching rules
+
+The no-proxy list determines which target hosts bypass the proxy and connect
+directly. Matching is **case-insensitive** and supports:
+
+| Pattern | Matches |
+|---|---|
+| `localhost` | Exact hostname `localhost` |
+| `.example.com` | Any subdomain (`api.example.com`) and the bare domain (`example.com`) |
+| `*` | All hosts — effectively disables the proxy |
+| `192.168.1.1` | Exact IP address |
+| `10.0.0.0/8` | Any IP within the CIDR range (optional) |
+
+Multiple entries are comma-separated:
+
+```
+localhost,.internal.com,192.168.1.1,10.0.0.0/8
+```
+
+Whitespace around entries is trimmed automatically.
 
 ---
 

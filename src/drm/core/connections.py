@@ -28,6 +28,8 @@ class ConnectionEntry:
     url: str
     username: str
     password: str
+    proxies: dict[str, str] | None = None
+    noproxy: list[str] | None = None
 
 
 def get_connections_path() -> Path:
@@ -53,6 +55,61 @@ def _check_posix_permissions(path: Path) -> None:
         raise ConnectionFilePermissionError(msg)
 
 
+def _parse_proxies(
+    name: str, raw_proxies: object
+) -> tuple[dict[str, str] | None, list[str] | None]:
+    """Parse the optional proxies object from a connection entry.
+
+    Return (proxies_dict, noproxy_list).
+    Raise ConnectionEntryInvalidError on validation failure.
+    """
+    if not isinstance(raw_proxies, dict):
+        # Not a dict → silently ignore (Requirement 3.5)
+        return None, None
+
+    # Extract and validate http/https proxy URLs
+    proxies: dict[str, str] = {}
+    for key in ("http", "https"):
+        if key not in raw_proxies:
+            continue
+        value = raw_proxies[key]
+        if not isinstance(value, str):
+            msg = (
+                f'Connection "{name}": invalid proxy value for '
+                f'"{key}" (expected string)'
+            )
+            raise ConnectionEntryInvalidError(msg)
+        if not value.startswith(("http://", "https://")):
+            msg = f'Connection "{name}": invalid proxy URL for "{key}": {value}'
+            raise ConnectionEntryInvalidError(msg)
+        proxies[key] = value
+
+    # Parse noproxy field from inside the proxies object
+    noproxy: list[str] | None = None
+    if "noproxy" in raw_proxies:
+        raw_noproxy = raw_proxies["noproxy"]
+        if raw_noproxy is None or raw_noproxy in ("", []):
+            # null, empty string, or empty array → no noproxy (Requirement 3.10)
+            noproxy = None
+        elif isinstance(raw_noproxy, str):
+            # Comma-separated string → split and trim (Requirement 3.8)
+            noproxy = [
+                entry.strip() for entry in raw_noproxy.split(",") if entry.strip()
+            ]
+        elif isinstance(raw_noproxy, list):
+            # Array → validate all elements are strings (Requirement 3.9)
+            if not all(isinstance(item, str) for item in raw_noproxy):
+                msg = f'Connection "{name}": "noproxy" array must contain only strings'
+                raise ConnectionEntryInvalidError(msg)
+            noproxy = list(raw_noproxy)
+        else:
+            # Invalid type → reject (Requirement 3.11)
+            msg = f'Connection "{name}": "noproxy" must be a string, array, or null'
+            raise ConnectionEntryInvalidError(msg)
+
+    return proxies if proxies else None, noproxy
+
+
 def _validate_entry(name: str, raw: object) -> ConnectionEntry:
     """Validate a single connection entry and return a ConnectionEntry.
 
@@ -68,11 +125,16 @@ def _validate_entry(name: str, raw: object) -> ConnectionEntry:
             msg = f'Connection "{name}": field "{field}" is missing or empty'
             raise ConnectionEntryInvalidError(msg)
 
+    # Parse optional proxies object
+    proxies, noproxy = _parse_proxies(name, raw.get("proxies"))
+
     return ConnectionEntry(
         name=name,
         url=raw["url"],
         username=raw["username"],
         password=raw["password"],
+        proxies=proxies,
+        noproxy=noproxy,
     )
 
 

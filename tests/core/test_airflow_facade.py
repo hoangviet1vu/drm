@@ -21,14 +21,18 @@ def _clean_registry(monkeypatch):
 class FakeClient:
     """A minimal implementation satisfying AirflowAuthClient protocol."""
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         return AuthResult(token="fake-tok", expires_at="2026-01-01T00:00:00+00:00")
 
 
 class AnotherClient:
     """A second implementation for multi-registration tests."""
 
-    def authenticate(self, url: str, username: str, password: str) -> AuthResult:
+    def authenticate(
+        self, url: str, username: str, password: str, *, proxy: str | None = None
+    ) -> AuthResult:
         return AuthResult(token="alt-tok", expires_at="2027-01-01T00:00:00+00:00")
 
 
